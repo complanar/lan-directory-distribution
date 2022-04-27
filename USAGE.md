@@ -3,6 +3,7 @@ Distribute and collect complete folders recursive to/from multiple clients in LA
 ./sync.sh <mode>
 
 Available modes are:
+    
     --share-each        Shares files with the devices as they exist in their share directories.
                         WARNING: The share directories are CLEARED.
                         
