@@ -115,7 +115,7 @@ notify_success() {
 }
 
 notify_abort () {
-    notify-send -i /usr/share/icons/up "Abgebrochen" "Der Benutzer hat die Aktion abgebrochen"
+    notify-send -i /usr/share/icons/down "Abgebrochen" "Der Benutzer hat die Aktion abgebrochen"
 }
 
 # ---------------------------------------------------------------------
