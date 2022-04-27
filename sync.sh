@@ -8,6 +8,8 @@ EXCHANGE_PATH="/home/schueler/Schreibtisch/Austausch"
 DEVICES_FROM=1
 DEVICES_TO=15
 
+PORT=32400
+
 # Return $1 as string with two digits
 get_two_digits () {
     if [ $1 -le 9 ]; then
@@ -27,50 +29,52 @@ get_ip () {
     echo "192.168.2.2$( get_two_digits $1)"
 }
 
-# ---------------------------------------------------------------------
-
-# Share files with device $1
-share_with () {
-    IP=$( get_ip $1 )
-    DIR=$( get_dir_name $1 )
-    SRC="$SHARE_PATH/$DIR"
-    # TODO: remove echo after testing :)
-    echo "scp -r -P 32400 ${SRC}/* schueler@$IP:${EXCHANGE_PATH}/*"
-    echo "rm -r ${SRC}/*"
-}
-
-# Fetch files from device $1
-fetch_from () {
-    IP=$( get_ip $1 )
-    DIR=$( get_dir_name $1 )
-    DST="SHARE_PATH/$DIR" 
-    # TODO: remove echo after testing :)
-    echo "scp -r -P 32400 schueler@$IP:${EXCHANGE_PATH}/* ${DST}/*"
-}
-
-# Copy files from $SHARE_ALL_PATH to individual local share directories
-copy_to_all_shares () {
-    for ((k=DEVICES_FROM;k<=DEVICES_TO;k++)); do
-        DIR=$( get_dir_name $k )
-        DST="$SHARE_PATH/$DIR"    
-        # TODO: remove echo after testing :)
-        echo "cp -r ${SHARE_ALL_PATH}/* ${DST}/*"
-    done
+# Return SSH login
+get_ssh_login () {
+    echo "schueler@$( get_ip $1 )"
 }
 
 # ---------------------------------------------------------------------
 
-# Share with all devices
+# Copy files via SSH from $1 to $2
+copy_via_ssh () {
+    # TODO: remove echo after testing
+    echo "scp -r -P ${PORT} ${1}/* ${2}/*"
+}
+
+# Share with devices (optional: from $1, else individual directory)
 share () {
+    # setup default directory (e.g. $SHARE_ALL_PATH)
+    SRC=$1
+    
     for ((k=DEVICES_FROM;k<=DEVICES_TO;k++)); do
-        share_with $k
+        LOGIN=$( get_ssh_login $k )
+        DIR=$( get_dir_name $k )
+        
+        if [ -z "$1" ]; then
+            # share from individual directory
+            SRC="${SHARE_PATH}/${DIR}"
+        fi
+        
+        DST="${LOGIN}:${EXCHANGE_PATH}"
+        copy_via_ssh $SRC $DST 
+
+        if [ -z "$1" ]; then
+            # clear individual share directory+
+            # TODO: remove echo after testing
+            echo "rm -r ${SRC}"
+        fi
     done
 }
 
 # Fetch from all devices
 fetch () {
     for ((k=DEVICES_FROM;k<=DEVICES_TO;k++)); do
-        fetch_from $k
+        LOGIN=$( get_ssh_login $k )
+        DIR=$( get_dir_name $k )
+        SRC="${LOGIN}:${EXCHANGE_PATH}"
+        DST="${SHARE_PATH}/${DIR}"        
+        copy_via_ssh $SRC $DST
     done
 }
 
@@ -80,8 +84,7 @@ if [ "$1" == "--share-each" ]; then
     share
 
 elif [ "$1" == "--share-all" ]; then
-    copy_to_all_shares
-    share
+    share $SHARE_ALL_PATH
     
 elif [ "$1" == "--fetch" ]; then
     fetch
