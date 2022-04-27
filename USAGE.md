@@ -1,6 +1,6 @@
 Distribute and collect complete folders recursive to/from multiple clients in LAN.
 
-./sync.sh <mode>
+./sync.sh mode
 
 Available modes are:
     
