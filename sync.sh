@@ -88,25 +88,47 @@ fetch () {
     done
 }
 
+# Create ZIP-file from fetched data
+create_zip () {
+    # create filename suggestion
+    FILENAME=`date +"%Y-%m-%d_%H-%m-%S"`
+    
+    # query actual filename
+    FILENAME=$( query_zip_name ${FILENAME} )
+    if [[ "$FILENAME" != *.zip ]]; then
+        FILENAME="${FILENAME}.zip"
+    fi
+
+    # create zip file
+    # TODO: remove echo after testing
+    echo "zip -r "${FILENAME}" ${FETCH_PATH}"
+}
+
 # ---------------------------------------------------------------------
 # --- UI Utilities ----------------------------------------------------
 # ---------------------------------------------------------------------
 
 confirm_share_each () {
     QUESTION="Die Dateien in in\n\n${SHARE_PATH}/$( get_dir_name $DEVICES_FROM )\nbis\n${SHARE_PATH}/$( get_dir_name $DEVICES_TO )\n\nwerden ausgeteilt. Dies kann einen Moment dauern. Sie werden benachrichtigt, wenn das Austeilen abgeschlossen ist.\n\nWARNUNG: Die genannten Ausgabe-Ordner werden anschließend VOLLSTÄNDIG GELEERT. Stellen Sie sicher, dass Sie eine KOPIE der Daten besitzen.\n\nFortfahren?"
-    zenity --question --text="$QUESTION" --width=500
+    zenity --question --title="Individuelles Austeilen" --text="$QUESTION" --width=500
     echo "$?"
 }
 
 confirm_share_all () {
     QUESTION="Die Dateien in\n\n${SHARE_ALL_PATH}\n\nwerden ausgeteilt. Dies kann einen Moment dauern. Sie werden benachrichtigt, wenn das Austeilen abgeschlossen ist."
-    zenity --question --text="$QUESTION" --width=500
+    zenity --question --title="Einheitliches Austeilen" --text="$QUESTION" --width=500
     echo "$?"
 }
 
 confirm_fetch () {
     QUESTION="Die Dateien der Schüler werden eingesammelt und in\n\n${FETCH_PATH}/$( get_dir_name $DEVICES_FROM )\nbis\n${FETCH_PATH}/$( get_dir_name $DEVICES_TO )\n\n abgespeichert. Dies kann einen Moment dauern. Sie werden benachrichtigt, wenn das Austeilen abgeschlossen ist."
-    zenity --question --text="$QUESTION" --width=500
+    zenity --question --title="Einsammeln" --text="$QUESTION" --width=500
+    echo "$?"
+}
+
+ask_to_zip () {
+    QUESTION="Sollen die eingesammelten Dateien als ZIP-Archiv gespeichert werden?"
+    zenity --question --title="ZIP-Datei erstellen" --width=500 --text="$QUESTION"
     echo "$?"
 }
 
@@ -116,6 +138,10 @@ notify_success() {
 
 notify_abort () {
     notify-send -i /usr/share/icons/down "Abgebrochen" "Der Benutzer hat die Aktion abgebrochen"
+}
+
+query_zip_name () {
+    zenity --file-selection --title="ZIP-Datei erstellen" --filename=$1 --save --confirm-overwrite --file-filter=*.zip
 }
 
 # ---------------------------------------------------------------------
@@ -148,6 +174,14 @@ elif [ "$1" == "--fetch" ]; then
     if [ $ANSWER = "0" ]; then
         fetch
         notify_success "Einsammeln"
+
+        # ask to zip
+        ANSWER=$( ask_to_zip )
+        
+        if [ $ANSWER = "0" ]; then
+            create_zip
+        fi
+
     else
         notify_abort
     fi
