@@ -14,7 +14,7 @@ REMOTE_USER="schueler"
 EXCHANGE_PATH="/home/${REMOTE_USER}/Schreibtisch/Austausch"
 
 LOCAL_USER="lehrer"
-FETCH_DIR="/home/${LOCAL_USER}/Schreibtisch/Eingesammelt"
+FETCH_PATH="/home/${LOCAL_USER}/Schreibtisch/Eingesammelt"
 SHARE_PATH="/home/${LOCAL_USER}/Schreibtisch/Austeilen"
 SHARE_ALL_PATH="$SHARE_PATH/Alle"
 
@@ -54,7 +54,7 @@ get_ssh_login () {
 
 # Copy files via SSH from $1 to $2
 copy_via_ssh () {
-    scp -r -P ${PORT} ${1}/* ${2}/*
+    scp -r -P ${PORT} ${1}/* ${2}
 }
 
 # ---------------------------------------------------------------------
@@ -76,9 +76,10 @@ share () {
             # share from individual directory
             SRC="${SHARE_PATH}/${DIR}"
         fi
-
         DST="${LOGIN}:${EXCHANGE_PATH}"
+        
         copy_via_ssh $SRC $DST &
+        
         # Catch process ids in global variable
         JOBS[$i]=$!
         i=$((i + 1))
@@ -94,9 +95,12 @@ fetch () {
         LOGIN=$( get_ssh_login $k )
         DIR=$( get_dir_name $k )
         SRC="${LOGIN}:${EXCHANGE_PATH}"
-        DST="${SHARE_PATH}/${DIR}"
-
+        DST="${FETCH_PATH}/${DIR}"
+        
+        mkdir -p $DST
+        
         copy_via_ssh $SRC $DST &
+        
         # Catch process ids in global variable
         JOBS[$i]=$!
         i=$((i + 1))
@@ -105,17 +109,21 @@ fetch () {
 
 # Clear individual directories
 clear_directories () {
-  echo "Clear directories"
-  for ((k=DEVICES_FROM;k<=DEVICES_TO;k++)); do
-      SRC="${SHARE_PATH}/$( get_dir_name $k )"
-      rm -r "${SRC}/*"
-  done
+    echo "Clear directories"
+    for ((k=DEVICES_FROM;k<=DEVICES_TO;k++)); do
+        SRC="${SHARE_PATH}/$( get_dir_name $k )"
+        if [ -d "$SRC" ]; then
+            if [ "$(ls -A $SRC)" ]; then
+                rm -r ${SRC}/*
+            fi
+        fi
+    done
 }
 
 # Create ZIP-file from fetched data
 create_zip () {
     # create filename suggestion
-    FILENAME=`date +"%Y-%m-%d_%H-%m-%S"`
+    FILENAME=`date +"%Y-%m-%d_%H-%M-%S"`
 
     # query actual filename
     FILENAME=$( query_zip_name ${FILENAME} )
@@ -125,7 +133,10 @@ create_zip () {
 
     # create zip file
     # TODO: remove echo after testing
-    echo "zip -r "${FILENAME}" ${FETCH_PATH}"
+    here=$PWD
+    cd ${FETCH_PATH}
+    zip -r "${FILENAME}" .
+    cd $here
 }
 
 # ---------------------------------------------------------------------
@@ -209,7 +220,7 @@ elif [ "$1" == "--share-all" ]; then
     ANSWER=$( confirm_share_all )
 
     if [ $ANSWER = "0" ]; then
-        share $SHARE_ALL_PATH
+        share "$SHARE_ALL_PATH"
         progess_bar
         notify_success "up" "einheitliche Austeilen"
     else
