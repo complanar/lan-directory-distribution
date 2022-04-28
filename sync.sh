@@ -204,7 +204,7 @@ progess_bar () {
 
       sleep 0.5
     done
-  ) | zenity --progress --title "$1-Fortschritt" --text "Übertrage auf Daten …" --percentage=0 --auto-close --width=500
+  ) | zenity --progress --title "${1}-Fortschritt" --text "Warte auf ${1} …" --percentage=0 --width=500
 }
 
 # ---------------------------------------------------------------------
@@ -215,6 +215,9 @@ if [ "$1" == "--share-each" ]; then
     ANSWER=$( confirm_share_each )
 
     if [ $ANSWER = "0" ]; then
+        # UGLY: Working with global variables
+        # Didn't find a way to return the PIDs from a subprocess without
+        # breaking the multithreading
         share
         progess_bar "Upload"
         clear_directories
@@ -227,8 +230,11 @@ elif [ "$1" == "--share-all" ]; then
     ANSWER=$( confirm_share_all )
 
     if [ $ANSWER = "0" ]; then
+        # UGLY: Working with global variables
+        # Didn't find a way to return the PIDs from a subprocess without
+        # breaking the multithreading
         share "$SHARE_ALL_PATH"
-        progess_bar "Download"
+        progess_bar "Upload"
         notify_success "up" "einheitliche Austeilen"
     else
         notify_abort "up"
@@ -242,7 +248,7 @@ elif [ "$1" == "--fetch" ]; then
         # Didn't find a way to return the PIDs from a subprocess without
         # breaking the multithreading
         fetch
-        progess_bar
+        progess_bar "Download"
 
         notify_success "down" "Einsammeln"
 
