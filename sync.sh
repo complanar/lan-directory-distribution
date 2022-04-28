@@ -5,9 +5,10 @@
 # ---------------------------------------------------------------------
 
 IP_TEMPLATE="192.168.2.2xx"
+PORT=32400
 
-IP_PREFIX=${IP_TEMPLATE%%x*}
-PREFLEN=$(( ${#IP_TEMPLATE} - ${#IP_PREFIX} ))
+DEVICES_FROM=1
+DEVICES_TO=15
 
 REMOTE_USER="schueler"
 EXCHANGE_PATH="/home/${REMOTE_USER}/Schreibtisch/Austausch"
@@ -17,10 +18,11 @@ FETCH_DIR="/home/${LOCAL_USER}/Schreibtisch/Eingesammelt"
 SHARE_PATH="/home/${LOCAL_USER}/Schreibtisch/Austeilen"
 SHARE_ALL_PATH="$SHARE_PATH/Alle"
 
-DEVICES_FROM=1
-DEVICES_TO=15
-
-PORT=32400
+# GLOBALS
+# Calculate string lengths for IP_TEMPLATE substring replace
+IP_PREFIX=${IP_TEMPLATE%%x*}
+SUFFLEN=$(( ${#IP_TEMPLATE} - ${#IP_PREFIX} ))
+JOBS=()
 
 # ---------------------------------------------------------------------
 # --- Utility Functions -----------------------------------------------
@@ -37,12 +39,12 @@ get_n_digits() {
 
 # Return local directory name for device $1
 get_dir_name () {
-    echo "S$( get_n_digits $1 $PREFLEN)"
+    echo "S$( get_n_digits $1 $SUFFLEN)"
 }
 
 # Return IP for device $1
 get_ip() {
-  echo "${IP_TEMPLATE%%x*}$(get_n_digits $1 $PREFLEN)"
+  echo "${IP_TEMPLATE%%x*}$(get_n_digits $1 $SUFFLEN)"
 }
 
 # Return SSH login for device $1
@@ -52,9 +54,7 @@ get_ssh_login () {
 
 # Copy files via SSH from $1 to $2
 copy_via_ssh () {
-    # TODO: remove echo after testing
-    $(echo "scp -r -P ${PORT} ${1}/* ${2}/*")
-    sleep 2
+    scp -r -P ${PORT} ${1}/* ${2}/*
 }
 
 # ---------------------------------------------------------------------
@@ -79,15 +79,10 @@ share () {
 
         DST="${LOGIN}:${EXCHANGE_PATH}"
         copy_via_ssh $SRC $DST &
-        # Catch process ids
+        # Catch process ids in global variable
         JOBS[$i]=$!
         i=$((i + 1))
 
-        if [ -z "$1" ]; then
-            # clear individual share directory+
-            # TODO: remove echo after testing
-            echo "rm -r ${SRC}"
-        fi
     done
 }
 
@@ -102,10 +97,19 @@ fetch () {
         DST="${SHARE_PATH}/${DIR}"
 
         copy_via_ssh $SRC $DST &
+        # Catch process ids in global variable
         JOBS[$i]=$!
         i=$((i + 1))
     done
-    #echo ${JOBS[@]}
+}
+
+# Clear individual directories
+clear_directories () {
+  echo "Clear directories"
+  for ((k=DEVICES_FROM;k<=DEVICES_TO;k++)); do
+      SRC="${SHARE_PATH}/$( get_dir_name $k )"
+      rm -r "${SRC}/*"
+  done
 }
 
 # Create ZIP-file from fetched data
@@ -195,6 +199,7 @@ if [ "$1" == "--share-each" ]; then
     if [ $ANSWER = "0" ]; then
         share
         progess_bar
+        clear_directories
         notify_success "up" "individuelle Austeilen"
     else
         notify_abort "up"
