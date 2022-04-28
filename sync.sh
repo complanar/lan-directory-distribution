@@ -132,7 +132,14 @@ create_zip () {
     fi
 
     # create zip in a subshell to trim unnessacary parts of the paths
-    ( cd ${FETCH_PATH}; zip -r "${FILENAME}" . )
+    (
+        if [ -d ${FETCH_PATH} ]; then
+            cd ${FETCH_PATH};
+            zip -r "${FILENAME}" .
+        else
+            notify_error "Beim Erstellen der ZIP-Archivs ist ein Fehler aufgetreten.\n\nDer Ordner ${FETCH_PATH} konnte nicht gelesen werden."
+        fi
+    )
 }
 
 # ---------------------------------------------------------------------
@@ -140,19 +147,19 @@ create_zip () {
 # ---------------------------------------------------------------------
 
 confirm_share_each () {
-    QUESTION="Die Dateien in in\n\n${SHARE_PATH}/$( get_dir_name $DEVICES_FROM )\nbis\n${SHARE_PATH}/$( get_dir_name $DEVICES_TO )\n\nwerden ausgeteilt. Dies kann einen Moment dauern. Sie werden benachrichtigt, wenn das Austeilen abgeschlossen ist.\n\nWARNUNG: Die genannten Ausgabe-Ordner werden anschließend VOLLSTÄNDIG GELEERT. Stellen Sie sicher, dass Sie eine KOPIE der Daten besitzen.\n\nFortfahren?"
+    QUESTION="Die Dateien in in\n\n    ${SHARE_PATH}/$( get_dir_name $DEVICES_FROM ) bis …/$( get_dir_name $DEVICES_TO )\n\nwerden ausgeteilt. Dies kann einen Moment dauern. Sie werden benachrichtigt, wenn das Austeilen abgeschlossen ist.\n\nWARNUNG: Die genannten Ausgabe-Ordner werden anschließend VOLLSTÄNDIG GELEERT. Stellen Sie sicher, dass Sie eine KOPIE der Daten besitzen.\n\nFortfahren?"
     zenity --question --title="Individuelles Austeilen" --text="$QUESTION" --width=500
     echo "$?"
 }
 
 confirm_share_all () {
-    QUESTION="Die Dateien in\n\n${SHARE_ALL_PATH}\n\nwerden ausgeteilt. Dies kann einen Moment dauern. Sie werden benachrichtigt, wenn das Austeilen abgeschlossen ist."
+    QUESTION="Die Dateien in\n\n    ${SHARE_ALL_PATH}\n\nwerden ausgeteilt.\n\n Dies kann einen Moment dauern. Sie werden benachrichtigt, wenn das Austeilen abgeschlossen ist."
     zenity --question --title="Einheitliches Austeilen" --text="$QUESTION" --width=500
     echo "$?"
 }
 
 confirm_fetch () {
-    QUESTION="Die Dateien der Schüler werden eingesammelt und in\n\n${FETCH_PATH}/$( get_dir_name $DEVICES_FROM )\nbis\n${FETCH_PATH}/$( get_dir_name $DEVICES_TO )\n\n abgespeichert. Dies kann einen Moment dauern. Sie werden benachrichtigt, wenn das Austeilen abgeschlossen ist."
+    QUESTION="Die Dateien der Schüler werden eingesammelt und in\n\n    ${FETCH_PATH}/$( get_dir_name $DEVICES_FROM ) bis …/$( get_dir_name $DEVICES_TO )\n\nabgespeichert.\n\nDies kann einen Moment dauern. Sie werden benachrichtigt, wenn das Austeilen abgeschlossen ist."
     zenity --question --title="Einsammeln" --text="$QUESTION" --width=500
     echo "$?"
 }
@@ -169,6 +176,10 @@ notify_success() {
 
 notify_abort () {
     notify-send -i /usr/share/icons/$1 "Abgebrochen" "Der Benutzer hat die Aktion abgebrochen"
+}
+
+notify_error() {
+    notify-send -c "im.error" "Fehler" "$1"
 }
 
 query_zip_name () {
@@ -193,7 +204,7 @@ progess_bar () {
 
       sleep 0.5
     done
-  ) | zenity --progress --text "Übertrage auf Daten …" --percentage=0 --auto-close --width=500
+  ) | zenity --progress --title "$1-Fortschritt" --text "Übertrage auf Daten …" --percentage=0 --auto-close --width=500
 }
 
 # ---------------------------------------------------------------------
@@ -205,7 +216,7 @@ if [ "$1" == "--share-each" ]; then
 
     if [ $ANSWER = "0" ]; then
         share
-        progess_bar
+        progess_bar "Upload"
         clear_directories
         notify_success "up" "individuelle Austeilen"
     else
@@ -217,7 +228,7 @@ elif [ "$1" == "--share-all" ]; then
 
     if [ $ANSWER = "0" ]; then
         share "$SHARE_ALL_PATH"
-        progess_bar
+        progess_bar "Download"
         notify_success "up" "einheitliche Austeilen"
     else
         notify_abort "up"
