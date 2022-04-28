@@ -77,9 +77,9 @@ share () {
             SRC="${SHARE_PATH}/${DIR}"
         fi
         DST="${LOGIN}:${EXCHANGE_PATH}"
-        
+
         copy_via_ssh $SRC $DST &
-        
+
         # Catch process ids in global variable
         JOBS[$i]=$!
         i=$((i + 1))
@@ -96,11 +96,11 @@ fetch () {
         DIR=$( get_dir_name $k )
         SRC="${LOGIN}:${EXCHANGE_PATH}"
         DST="${FETCH_PATH}/${DIR}"
-        
+
         mkdir -p $DST
-        
+
         copy_via_ssh $SRC $DST &
-        
+
         # Catch process ids in global variable
         JOBS[$i]=$!
         i=$((i + 1))
@@ -131,12 +131,8 @@ create_zip () {
         FILENAME="${FILENAME}.zip"
     fi
 
-    # create zip file
-    # TODO: remove echo after testing
-    here=$PWD
-    cd ${FETCH_PATH}
-    zip -r "${FILENAME}" .
-    cd $here
+    # create zip in a subshell to trim unnessacary parts of the paths
+    ( cd ${FETCH_PATH}; zip -r "${FILENAME}" . )
 }
 
 # ---------------------------------------------------------------------
