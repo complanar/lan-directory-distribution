@@ -204,7 +204,7 @@ progess_bar () {
 
       sleep 0.5
     done
-  ) | zenity --progress --title "${1}-Fortschritt" --text "Warte auf ${1} …" --percentage=0 --width=500
+  ) | zenity --progress --title "${1}-Fortschritt" --text "Warte auf ${1} …" --percentage=0 --auto-close --width=500
 }
 
 # ---------------------------------------------------------------------
