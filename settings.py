@@ -5,7 +5,7 @@ import configparser, ipaddress, os
 class Settings(object):
     """Holds configuration details."""
     
-    def loadFromFile(fname):
+    def loadFromFile(self, fname):
         cfg = configparser.ConfigParser()
         cfg.read(fname)
 
