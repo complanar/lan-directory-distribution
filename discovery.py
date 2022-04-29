@@ -6,20 +6,20 @@ import threading, subprocess, time
 class PingWorker(threading.Thread):
     """Thread to handle pinging a device."""
     
-    def __init__(self, device, ip, count=1, ttl=1):
+    def __init__(self, device, ip, count=1, wait=1):
         """Setup threaded ping to the given IP."""
         super().__init__()
         self.device = device
         self.ip     = ip
         self.count  = count
-        self.ttl    = ttl
+        self.wait   = wait
         self.status = None
         
         self.start()
         
     def run(self):
         """Trigger ping as subprocess and save reachability status."""
-        cmd = f'ping {self.ip} -c {self.count} -t {self.ttl}'
+        cmd = f'ping {self.ip} -c {self.count} -W {self.wait}'
         p = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.status = p.returncode == 0
