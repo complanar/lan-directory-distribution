@@ -16,7 +16,7 @@ class TransferWorker(threading.Thread):
         self.start()
 
     def run(self):
-        cmd = f'scp -o ConnectTimeout={self.timeout} -rP {self.port} {self.src} {self.dst}'
+        cmd = f'scp -o ConnectTimeout={self.timeout} -rP {self.port} {self.src}/* {self.dst}/*'
         subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
 
 
