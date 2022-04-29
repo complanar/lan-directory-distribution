@@ -17,6 +17,8 @@ FETCH_PATH="~/Schreibtisch/Eingesammelt"
 SHARE_PATH="~/Schreibtisch/Austeilen"
 SHARE_ALL_PATH="$SHARE_PATH/Alle"
 
+CONNECTIONS_FILE="~/.cache/sync_devices.txt"
+
 # GLOBALS
 # Calculate string lengths for IP_TEMPLATE substring replace
 IP_PREFIX=${IP_TEMPLATE%%x*}
@@ -53,15 +55,37 @@ get_ssh_login () {
 
 device_reachable () {
     IP=$( get_ip $1 )
-    # netcat acually hangs "forever" if the ip address does not belong to the same local network
-    #if nc -z -v $IP $PORT; then
-
+    # netcat actually hangs sometimes if the ip address does not belong to the same local network
+    #nc -z -v -w1 $IP $PORT &>/dev/null
     # Alternative: use ping
     ping -c1 -W1 -q $IP &>/dev/null
     if [ $? = "0" ]; then
       echo "true"
     else
       echo "false"
+    fi
+}
+
+get_connected_devices () {
+    # wipe temporary file
+    echo -n "" > ~/.cache/sync_devices.txt
+    for n in $( seq $DEVICES_FROM $DEVICES_TO ); do
+        $(
+            if [ $( device_reachable $n) = "true" ]; then
+                echo "$n" >> ~/.cache/sync_devices.txt
+            fi
+        ) &
+    done
+    wait
+    cat ~/.cache/sync_devices.txt
+    rm ~/.cache/sync_devices.txt
+}
+
+directory_empty () {
+    if [ -z "$(ls -A $1)" ]; then
+      echo "true"
+    else
+        echo "false"
     fi
 }
 
@@ -79,11 +103,12 @@ share () {
     # setup default directory (e.g. $SHARE_ALL_PATH)
     SRC=$1
 
+    DEVICE_LIST=$( get_connected_devices )
     i=0
     JOBS=()
-    for ((k=DEVICES_FROM;k<=DEVICES_TO;k++)); do
-        LOGIN=$( get_ssh_login $k )
-        DIR=$( get_dir_name $k )
+    for DEVICE in ${DEVICE_LIST[@]}; do
+        LOGIN=$( get_ssh_login $DEVICE )
+        DIR=$( get_dir_name $DEVICE )
 
         if [ -z "$1" ]; then
             # share from individual directory
@@ -91,33 +116,30 @@ share () {
         fi
         DST="${LOGIN}:${EXCHANGE_PATH}"
 
-        if [ $( device_reachable $k ) = "true" ]; then
-            copy_via_ssh $SRC $DST &
-            # Catch process ids in global variable
-            JOBS[$i]=$!
-            i=$((i + 1))
-        fi
-
+        copy_via_ssh $SRC $DST &
+        # Catch process ids in global variable
+        JOBS[$i]=$!
+        i=$((i + 1))
     done
 }
 
 # Fetch from all devices
 fetch () {
+    DEVICE_LIST=$( get_connected_devices )
+
     i=0
     JOBS=()
-    for ((k=DEVICES_FROM;k<=DEVICES_TO;k++)); do
-        LOGIN=$( get_ssh_login $k )
-        DIR=$( get_dir_name $k )
+    for DEVICE in ${DEVICE_LIST[@]}; do
+        LOGIN=$( get_ssh_login $DEVICE )
+        DIR=$( get_dir_name $DEVICE )
         SRC="${LOGIN}:${EXCHANGE_PATH}"
         DST="${FETCH_PATH}/${DIR}"
 
-        if [ $( device_reachable $k ) = "true" ]; then
-          mkdir -p $DST
-          copy_via_ssh $SRC $DST &
-          # Catch process ids in global variable
-          JOBS[$i]=$!
-          i=$((i + 1))
-        fi
+        mkdir -p $DST
+        copy_via_ssh $SRC $DST &
+        # Catch process ids in global variable
+        JOBS[$i]=$!
+        i=$((i + 1))
     done
 }
 
@@ -266,11 +288,12 @@ elif [ "$1" == "--fetch" ]; then
 
         notify_success "down" "Einsammeln"
 
-        # ask to zip
-        ANSWER=$( ask_to_zip )
-
-        if [ $ANSWER = "0" ]; then
-            create_zip
+        # ask to zip if directory is not empty
+        if [ -z "$(ls -A $FETCH_PATH)" ]; then
+            ANSWER=$( ask_to_zip )
+            if [ $ANSWER = "0" ]; then
+                create_zip
+            fi
         fi
 
     else
@@ -278,7 +301,7 @@ elif [ "$1" == "--fetch" ]; then
     fi
 
 else
-    cat USAGE.md
+    cat "$(dirname $BASH_SOURCE[0])/USAGE.md"
     echo ""
     echo "Hardcoded paths:"
     echo "----------------"
