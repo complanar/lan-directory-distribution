@@ -11,11 +11,10 @@ DEVICES_FROM=1
 DEVICES_TO=15
 
 REMOTE_USER="schueler"
-EXCHANGE_PATH="/home/${REMOTE_USER}/Schreibtisch/Austausch"
+EXCHANGE_PATH="~/Schreibtisch/Austausch"
 
-LOCAL_USER="lehrer"
-FETCH_PATH="/home/${LOCAL_USER}/Schreibtisch/Eingesammelt"
-SHARE_PATH="/home/${LOCAL_USER}/Schreibtisch/Austeilen"
+FETCH_PATH="~/Schreibtisch/Eingesammelt"
+SHARE_PATH="~/Schreibtisch/Austeilen"
 SHARE_ALL_PATH="$SHARE_PATH/Alle"
 
 # GLOBALS
@@ -52,6 +51,20 @@ get_ssh_login () {
     echo "${REMOTE_USER}@$( get_ip $1 )"
 }
 
+device_reachable () {
+    IP=$( get_ip $1 )
+    # netcat acually hangs "forever" if the ip address does not belong to the same local network
+    #if nc -z -v $IP $PORT; then
+
+    # Alternative: use ping
+    ping -c1 -W1 -q $IP &>/dev/null
+    if [ $? = "0" ]; then
+      echo "true"
+    else
+      echo "false"
+    fi
+}
+
 # Copy files via SSH from $1 to $2
 copy_via_ssh () {
     scp -r -P ${PORT} ${1}/* ${2}
@@ -78,11 +91,12 @@ share () {
         fi
         DST="${LOGIN}:${EXCHANGE_PATH}"
 
-        copy_via_ssh $SRC $DST &
-
-        # Catch process ids in global variable
-        JOBS[$i]=$!
-        i=$((i + 1))
+        if [ $( device_reachable $k ) = "true" ]; then
+            copy_via_ssh $SRC $DST &
+            # Catch process ids in global variable
+            JOBS[$i]=$!
+            i=$((i + 1))
+        fi
 
     done
 }
@@ -97,13 +111,13 @@ fetch () {
         SRC="${LOGIN}:${EXCHANGE_PATH}"
         DST="${FETCH_PATH}/${DIR}"
 
-        mkdir -p $DST
-
-        copy_via_ssh $SRC $DST &
-
-        # Catch process ids in global variable
-        JOBS[$i]=$!
-        i=$((i + 1))
+        if [ $( device_reachable $k ) = "true" ]; then
+          mkdir -p $DST
+          copy_via_ssh $SRC $DST &
+          # Catch process ids in global variable
+          JOBS[$i]=$!
+          i=$((i + 1))
+        fi
     done
 }
 
