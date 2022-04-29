@@ -40,7 +40,7 @@ def shareEach(settings):
         return
     
     notify('transfer.complete', 'Zurückgeben fertig', 'Das Zurückgeben wurde abgeschlossen')
-     # FIXME: clear shares
+    # FIXME: clear shares
 
 
 def shareAll(settings):
@@ -90,12 +90,13 @@ def fetch(settings):
 
 
 if __name__ == '__main__':
-    s = Settings()
-    s.loadFromFile('settings.cfg')
-
     # enable verbosity
     if '-v' in sys.argv:
         logging.basicConfig(level=logging.DEBUG)
+
+    s = Settings()
+    s.loadFromFile('settings.cfg')
+    s.ensureFolders()
 
     cli = CliArgs()
     cli.register('--share-each', shareEach)

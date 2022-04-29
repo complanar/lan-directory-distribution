@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import configparser, ipaddress, os
+import configparser, ipaddress, os, logging
 
 class Settings(object):
     """Holds configuration details."""
@@ -18,6 +18,21 @@ class Settings(object):
         self.share         = cfg['folders']['share']
         self.fetch         = cfg['folders']['fetch']
         self.shareall      = cfg['folders']['shareall']
+
+    def ensureFolders(self):
+        for folder in [self.exchange, self.share, self.fetch, self.shareall]:
+            folder = folder.replace('~', os.path.expanduser('~'))
+            if not os.path.isdir(folder):
+                os.makedirs(folder)
+                logging.debug(f'{folder} created')
+
+        for folder in [self.share, self.fetch]:
+            for device in range(self.num_clients):
+                subfolder = self.getDirName(device)
+                tmp = os.path.join(folder.replace('~', os.path.expanduser('~')), subfolder)
+                if not os.path.isdir(tmp):
+                    os.mkdir(tmp)
+                    logging.debug(f'{tmp} created')
 
     def getDirName(self, device):
         """Return local fetch directory for a device, e.g. S03 for device #2"""
