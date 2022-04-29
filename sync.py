@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sys, os
+import sys, os, logging
 
 from settings import Settings
 from discovery import discover
@@ -92,6 +92,10 @@ def fetch(settings):
 if __name__ == '__main__':
     s = Settings()
     s.loadFromFile('settings.cfg')
+
+    # enable verbosity
+    if '-v' in sys.argv:
+        logging.basicConfig(level=logging.DEBUG)
 
     cli = CliArgs()
     cli.register('--share-each', shareEach)

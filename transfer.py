@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import subprocess, threading, time
+import subprocess, threading, time, logging
 
 
 class TransferWorker(threading.Thread):
@@ -17,6 +17,7 @@ class TransferWorker(threading.Thread):
 
     def run(self):
         cmd = f'scp -o ConnectTimeout={self.timeout} -rP {self.port} {self.src}/* {self.dst}/*'
+        logging.debug(cmd)
         subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
 
 

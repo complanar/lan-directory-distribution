@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import threading, subprocess, time
+import threading, subprocess, time, logging
 
 
 class PingWorker(threading.Thread):
@@ -20,6 +20,7 @@ class PingWorker(threading.Thread):
     def run(self):
         """Trigger ping as subprocess and save reachability status."""
         cmd = f'ping {self.ip} -c {self.count} -W {self.wait}'
+        logging.debug(cmd)
         p = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.status = p.returncode == 0
