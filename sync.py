@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
-import sys, os, logging
+import sys, os, logging, datetime, shutil
 
 from settings import Settings
 from discovery import discover
 from transfer import batch
 from args import CliArgs
-from ui import ProgressBar, ask, notify
+from ui import ProgressBar, ask, choose, notify
 
 
 def queryDevices(settings):
@@ -86,7 +86,19 @@ def fetch(settings):
         return
     
     notify('transfer.complete', 'Einsammeln fertig', 'Das Einsammeln wurde abgeschlossen')
-    # FIXME: compress to zip
+
+    msg = f'Sollen die eingesammelten Dateien zu einem ZIP-Archiv komprimiert werden?'
+    ok = ask('ZIP-Archiv', msg)
+    if ok:
+        zipname = datetime.datetime.now().strftime('%Y-%m-%d_%H-%m-%S.zip')
+        zipname = choose('ZIP-Archiv', zipname, filter=['*.zip'])
+        if zipname is None:
+            notify('transfer.error', 'Abgebrochen', 'Der Benutzer hat den Vorgang abgebrochen')
+            return
+
+        shutil.make_archive(zipname, 'zip', settings.fetch)
+        logging.debug(f'{zipname} created')
+        notify('transfer.complete', 'Einsammeln fertig', 'Das Einsammeln wurde abgeschlossen')
 
 
 if __name__ == '__main__':

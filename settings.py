@@ -15,13 +15,12 @@ class Settings(object):
 
         self.folder_prefix = cfg['folders']['prefix']
         self.exchange      = cfg['folders']['exchange']
-        self.share         = cfg['folders']['share']
-        self.fetch         = cfg['folders']['fetch']
-        self.shareall      = cfg['folders']['shareall']
+        self.share         = cfg['folders']['share'].replace('~', os.path.expanduser('~'))
+        self.fetch         = cfg['folders']['fetch'].replace('~', os.path.expanduser('~'))
+        self.shareall      = cfg['folders']['shareall'].replace('~', os.path.expanduser('~'))
 
     def ensureFolders(self):
-        for folder in [self.exchange, self.share, self.fetch, self.shareall]:
-            folder = folder.replace('~', os.path.expanduser('~'))
+        for folder in [self.share, self.fetch, self.shareall]:
             if not os.path.isdir(folder):
                 os.makedirs(folder)
                 logging.debug(f'{folder} created')
@@ -29,7 +28,7 @@ class Settings(object):
         for folder in [self.share, self.fetch]:
             for device in range(self.num_clients):
                 subfolder = self.getDirName(device)
-                tmp = os.path.join(folder.replace('~', os.path.expanduser('~')), subfolder)
+                tmp = os.path.join(folder, subfolder)
                 if not os.path.isdir(tmp):
                     os.mkdir(tmp)
                     logging.debug(f'{tmp} created')
