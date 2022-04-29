@@ -22,23 +22,23 @@ class SettingTest(unittest.TestCase):
         del self.settings
 
     def test_getDirName(self):
-        self.assertEqual(self.settings.getDirName(3), 'PC03')
-        self.assertEqual(self.settings.getDirName(12), 'PC12')
+        self.assertEqual(self.settings.getDirName(2), 'PC03')
+        self.assertEqual(self.settings.getDirName(11), 'PC12')
 
     def test_getIp(self):
-        self.assertEqual('1.1.1.10', str(self.settings.getIp(1)))
-        self.assertEqual('1.1.1.11', str(self.settings.getIp(2)))
-        self.assertEqual('1.1.1.30', str(self.settings.getIp(21)))
+        self.assertEqual('1.1.1.10', str(self.settings.getIp(0)))
+        self.assertEqual('1.1.1.11', str(self.settings.getIp(1)))
+        self.assertEqual('1.1.1.30', str(self.settings.getIp(20)))
 
     def test_getFetchDir(self):
-        self.assertEqual('~/fetch/PC03', self.settings.getFetchDir(3))
-        self.assertEqual('~/fetch/PC21', self.settings.getFetchDir(21))
+        self.assertEqual('~/fetch/PC03', self.settings.getFetchDir(2))
+        self.assertEqual('~/fetch/PC21', self.settings.getFetchDir(20))
     
     def test_getShareDir(self):
-        self.assertEqual('~/share/PC03', self.settings.getShareDir(3))
-        self.assertEqual('~/share/PC24', self.settings.getShareDir(24))
+        self.assertEqual('~/share/PC03', self.settings.getShareDir(2))
+        self.assertEqual('~/share/PC24', self.settings.getShareDir(23))
         self.assertEqual('~/shareAll', self.settings.getShareDir())
 
     def getExchangeDir(self):
-        self.assertEqual('tester@1.1.1.10:~/exchange', self.settings.getExchangeDir(1))
-        self.assertEqual('tester@1.1.1.23:~/exchange', self.settings.getExchangeDir(12))
+        self.assertEqual('tester@1.1.1.10:~/exchange', self.settings.getExchangeDir(0))
+        self.assertEqual('tester@1.1.1.23:~/exchange', self.settings.getExchangeDir(11))

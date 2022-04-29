@@ -30,8 +30,8 @@ def discover(settings, progress, delay=0.1):
     # setup workers
     worker = list()
     for device in range(settings.num_clients):
-        ip = settings.getIp(device+1)
-        worker.append(PingWorker(device+1, ip))
+        ip = settings.getIp(device)
+        worker.append(PingWorker(device, ip))
     
     # wait and update progress bar
     n = settings.num_clients - 1

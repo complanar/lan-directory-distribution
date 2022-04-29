@@ -20,12 +20,12 @@ class Settings(object):
         self.shareall      = cfg['folders']['shareall']
 
     def getDirName(self, device):
-        """Return local fetch directory for a device, e.g. S03 for device 3"""
-        return self.folder_prefix + str(device).zfill(2)
+        """Return local fetch directory for a device, e.g. S03 for device #2"""
+        return self.folder_prefix + str(device+1).zfill(2)
 
     def getIp(self, device):
         """Return IP of a device."""
-        return self.first_ip + device - 1
+        return self.first_ip + device
 
     def getFetchDir(self, device):
         """Return local fetch directory path for the given device."""

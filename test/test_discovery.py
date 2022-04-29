@@ -42,7 +42,7 @@ class DiscoveryTest(unittest.TestCase):
         p = DummyProgress()
         devices = discover(self.settings, p)
         self.assertEqual(p.value, 1.0)
-        self.assertEqual(devices, [1, 2, 3, 4, 5])
+        self.assertEqual(devices, [0, 1, 2, 3, 4])
 
         self.settings.first_ip = ipaddress.ip_address('0.0.0.1')
         p = DummyProgress()
