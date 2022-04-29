@@ -98,7 +98,7 @@ def fetch(settings):
 
         shutil.make_archive(zipname, 'zip', settings.fetch)
         logging.debug(f'{zipname} created')
-        notify('transfer.complete', 'Einsammeln fertig', 'Das Einsammeln wurde abgeschlossen')
+        notify('transfer.complete', 'ZIP erstellt', 'Das ZIP-Archiv wurde erstellt')
 
 
 if __name__ == '__main__':
