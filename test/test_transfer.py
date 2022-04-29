@@ -19,7 +19,7 @@ class DummyProgress(object):
 
 # ---------------------------------------------------------------------
 
-class DiscoveryTest(unittest.TestCase):
+class TransferTest(unittest.TestCase):
         
     def setUp(self):
         self.settings = Settings()
