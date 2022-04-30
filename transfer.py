@@ -1,17 +1,20 @@
 #!/usr/bin/python3
 
-import subprocess, threading, time, logging
+import subprocess
+import threading
+import time
+import logging
 
 
 class TransferWorker(threading.Thread):
     """Thread to handle copy via SSH."""
-    
+
     def __init__(self, src, dst, port=32400, timeout=3):
         """Transer files from {src} to {dst}."""
         super().__init__()
-        self.src     = src
-        self.dst     = dst
-        self.port    = port
+        self.src = src
+        self.dst = dst
+        self.port = port
         self.timeout = timeout
         self.start()
 
@@ -31,7 +34,7 @@ be picked based on the actual device using {src_lambda} and {dst_lambda}.
         src = src_lambda(device)
         dst = dst_lambda(device)
         worker.append(TransferWorker(src, dst))
-    
+
     # wait and update progress bar
     num_devices = len(devices)
     n = num_devices
@@ -39,6 +42,7 @@ be picked based on the actual device using {src_lambda} and {dst_lambda}.
         n = threading.activeCount() - 1
         progress((num_devices - n) / num_devices)
         time.sleep(delay)
-    
-    # FIXME: progress.getStatus() isn't working correctly; failed SCPs are not checked
+
+    # FIXME: progress.getStatus() isn't working correctly; failed SCPs are not
+    # checked
     return n == 0

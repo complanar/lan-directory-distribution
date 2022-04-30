@@ -1,23 +1,25 @@
 #!/usr/bin/python3
 
-import unittest, ipaddress
+import unittest
+import ipaddress
 
 from settings import Settings
 
+
 class SettingTest(unittest.TestCase):
-        
+
     def setUp(self):
         self.settings = Settings()
-        self.settings.first_ip    = ipaddress.ip_address('1.1.1.10')
+        self.settings.first_ip = ipaddress.ip_address('1.1.1.10')
         self.settings.num_clients = 50
-        self.settings.user        = 'tester'
+        self.settings.user = 'tester'
 
         self.settings.folder_prefix = 'PC'
-        self.settings.exchange      = '~/exchange'
-        self.settings.fetch         = '~/fetch'
-        self.settings.share         = '~/share'
-        self.settings.shareall      = '~/shareAll'
-        
+        self.settings.exchange = '~/exchange'
+        self.settings.fetch = '~/fetch'
+        self.settings.share = '~/share'
+        self.settings.shareall = '~/shareAll'
+
     def tearDown(self):
         del self.settings
 
@@ -33,12 +35,16 @@ class SettingTest(unittest.TestCase):
     def test_getFetchDir(self):
         self.assertEqual('~/fetch/PC03', self.settings.getFetchDir(2))
         self.assertEqual('~/fetch/PC21', self.settings.getFetchDir(20))
-    
+
     def test_getShareDir(self):
         self.assertEqual('~/share/PC03', self.settings.getShareDir(2))
         self.assertEqual('~/share/PC24', self.settings.getShareDir(23))
         self.assertEqual('~/shareAll', self.settings.getShareDir())
 
     def getExchangeDir(self):
-        self.assertEqual('tester@1.1.1.10:~/exchange', self.settings.getExchangeDir(0))
-        self.assertEqual('tester@1.1.1.23:~/exchange', self.settings.getExchangeDir(11))
+        self.assertEqual(
+            'tester@1.1.1.10:~/exchange',
+            self.settings.getExchangeDir(0))
+        self.assertEqual(
+            'tester@1.1.1.23:~/exchange',
+            self.settings.getExchangeDir(11))

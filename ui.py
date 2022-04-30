@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
-import subprocess, tempfile
+import subprocess
+import tempfile
+
 
 class ProgressBar(object):
     """Creates a zenity-based progress bar that can be altered.
@@ -23,13 +25,18 @@ Message must contain {0} which is replaced by the percentage value
         filename = self.tmpfile.name
         message = message.format('$VAL')
 
-        # create progress bar: fetch progress from tmpfile, update progressbar, loop until 100%
+        # create progress bar: fetch progress from tmpfile, update progressbar,
+        # loop until 100%
         cmd = f'VAL=0; (while [ $VAL -lt 100 ] ; do VAL2=`cat {filename}`; if [ $VAL -ne $VAL2 ]; then VAL=$VAL2; echo "#{message}"; echo $VAL; fi; sleep {delay}; done)| zenity --progress --title="{title}" --text="Bitte warten" --auto-close --width=500'
-        self.process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.process = subprocess.Popen(
+            cmd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
 
     def __call__(self, value):
         """Modify the progress state with [0.0, 1.0]."""
-        value = int(value*100)
+        value = int(value * 100)
         self.tmpfile.seek(0)
         self.tmpfile.write(str(value))
         self.tmpfile.flush()
@@ -49,6 +56,7 @@ Message must contain {0} which is replaced by the percentage value
 
 # ---------------------------------------------------------------------
 
+
 def ask(title, question):
     """Show a question via zenity using the {title} and {qestion} text.
 Returns whether yes (True) or no (False) were clicked.
@@ -56,8 +64,13 @@ Returns whether yes (True) or no (False) were clicked.
 answer = ask("Wait a moment", "Do really want this to happen?")
 """
     cmd = f'zenity --question --title="{title}" --text="{question}" --width=500'
-    p = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.run(
+        cmd,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
     return p.returncode == 0
+
 
 def choose(title, filename, save=True, overwrite=True, filter=[]):
     cmd = f'zenity --file-selection --title="{title}" --filename="{filename}" '
@@ -68,11 +81,16 @@ def choose(title, filename, save=True, overwrite=True, filter=[]):
     for f in filter:
         cmd += f'--file-filter="{f}"'
 
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(
+        cmd,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
     filename = p.communicate()[0].decode().split('\n')[0]
     if filename == '':
         return None
     return filename
+
 
 def notify(category, title, message):
     """Trigger a notification.

@@ -14,4 +14,3 @@ class CliArgs(object):
                 self.lookup[key](**kwargs)
                 return True
         return False
-
