@@ -28,6 +28,13 @@ def getDevicesList(devices):
 
 def shareEach(settings):
     devices = queryDevices(settings)
+    if len(devices) == 0:
+        notify(
+            'device',
+            'Abgebrochen',
+            'Es wurden keine Geräte gefunden')
+        return
+
     devlist = getDevicesList(devices)
 
     msg = f'An folgende Schülercomputern können Daten zurückgegeben werden:\n\n{devlist}\n\nFortfahren?'
@@ -59,7 +66,14 @@ def shareEach(settings):
 
 
 def shareAll(settings):
-    devices = queryDevices(settings)
+    devices = queryDevices(settings) 
+    if len(devices) == 0:
+        notify(
+            'device',
+            'Abgebrochen',
+            'Es wurden keine Geräte gefunden')
+        return
+
     devlist = getDevicesList(devices)
 
     msg = f'An folgende Schülercomputern kann ausgeteilt werden werden:\n\n{devlist}\n\nFortfahren?'
@@ -91,6 +105,13 @@ def shareAll(settings):
 
 def fetch(settings):
     devices = queryDevices(settings)
+    if len(devices) == 0:
+        notify(
+            'device',
+            'Abgebrochen',
+            'Es wurden keine Geräte gefunden')
+        return
+
     devlist = getDevicesList(devices)
 
     msg = f'Von folgenden Schülercomputern kann eingesammelt werden:\n\n{devlist}\n\nFortfahren?'
