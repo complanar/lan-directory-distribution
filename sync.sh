@@ -293,7 +293,7 @@ elif [ "$1" == "--fetch" ]; then
         notify_success "down" "Einsammeln"
 
         # ask to zip if directory is not empty
-        if [ -z "$(ls -A $FETCH_PATH)" ]; then
+        if [ $( directory_empty $FETCH_PATH ) = "false" ]; then
             ANSWER=$( ask_to_zip )
             if [ $ANSWER = "0" ]; then
                 create_zip
