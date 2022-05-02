@@ -11,19 +11,21 @@ DEVICES_FROM=1
 DEVICES_TO=15
 
 REMOTE_USER="schueler"
-EXCHANGE_PATH="~/Schreibtisch/Austausch"
+EXCHANGE_PATH="/home/$REMOTE_USER/Schreibtisch/Austausch"
 
-FETCH_PATH="~/Schreibtisch/Eingesammelt"
-SHARE_PATH="~/Schreibtisch/Austeilen"
+LOCAL_USER=$(whoami)
+FETCH_PATH="/home/$LOCAL_USER/Schreibtisch/Eingesammelt"
+SHARE_PATH="/home/$LOCAL_USER/Schreibtisch/Austeilen"
 SHARE_ALL_PATH="$SHARE_PATH/Alle"
 
-CONNECTIONS_FILE="~/.cache/sync_devices.txt"
+CONNECTIONS_FILE="/home/$LOCAL_USER/.cache/sync_devices.txt"
 
 # GLOBALS
 # Calculate string lengths for IP_TEMPLATE substring replace
 IP_PREFIX=${IP_TEMPLATE%%x*}
 SUFFLEN=$(( ${#IP_TEMPLATE} - ${#IP_PREFIX} ))
 JOBS=()
+DEVICE_LIST=()
 
 # ---------------------------------------------------------------------
 # --- Utility Functions -----------------------------------------------
@@ -116,10 +118,12 @@ share () {
         fi
         DST="${LOGIN}:${EXCHANGE_PATH}"
 
-        copy_via_ssh $SRC $DST &
-        # Catch process ids in global variable
-        JOBS[$i]=$!
-        i=$((i + 1))
+        if [ $( directory_empty $SRC ) = "false" ]; then
+            copy_via_ssh $SRC $DST &
+            # Catch process ids in global variable
+            JOBS[$i]=$!
+            i=$((i + 1))
+        fi
     done
 }
 
@@ -136,7 +140,7 @@ fetch () {
         DST="${FETCH_PATH}/${DIR}"
 
         mkdir -p $DST
-        copy_via_ssh $SRC $DST &
+        copy_via_ssh $SRC "$DST" &
         # Catch process ids in global variable
         JOBS[$i]=$!
         i=$((i + 1))
@@ -145,12 +149,12 @@ fetch () {
 
 # Clear individual directories
 clear_directories () {
-    echo "Clear directories"
-    for ((k=DEVICES_FROM;k<=DEVICES_TO;k++)); do
-        SRC="${SHARE_PATH}/$( get_dir_name $k )"
+    for k in $(seq $DEVICES_FROM $DEVICES_TO); do
+        DIR=$( get_dir_name $DEVICE )
+        SRC="${SHARE_PATH}/${DIR}"
         if [ -d "$SRC" ]; then
             if [ "$(ls -A $SRC)" ]; then
-                rm -r ${SRC}/*
+                rm -r $SRC/*
             fi
         fi
     done
