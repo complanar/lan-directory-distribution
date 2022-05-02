@@ -52,6 +52,7 @@ zenity --progress --title="{title}" --text="Bitte warten" --auto-close --width=5
         self.start()
 
     def run(self):
+        """Run zenity progressbar via subprocess."""
         p = subprocess.run(
             self.cmd,
             shell=True,
@@ -67,6 +68,9 @@ zenity --progress --title="{title}" --text="Bitte warten" --auto-close --width=5
         self.tmpfile.flush()
 
     def finish(self, auto_raise=True):
+        """Force progressbar to finish. Raise KeyboardInterrupt if
+{auto_raise} is True.
+"""
         self.__call__(1.0)
         self.join()
         if self.status:
@@ -97,13 +101,15 @@ answer = ask("Wait a moment", "Do really want this to happen?")
 
 def confirm(title, statement):
     """Show confirm dialog. On cancel, a KeyboardInterrupt is raised as if
-The user canceled the programm with CTRL+R.
+The user canceled the programm with CTRL+Z.
 """
     if not ask(title, statement):
         raise KeyboardInterrupt()
 
 
 def choose(title, filename, save=True, overwrite=True, filter=[]):
+    """Show a file choose dialog.
+"""
     cmd = f'zenity --file-selection --title="{title}" --filename="{filename}" '
     if save:
         cmd += '--save '
