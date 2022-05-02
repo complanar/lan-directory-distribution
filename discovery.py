@@ -59,8 +59,6 @@ def discover(settings, progress, delay=0.1):
             missing.append(w.device)
 
     if len(available) == 0:
-        raise SystemExit(
-            'Keine Geräte',
-            f'Im Netzwerk wurden keine verfügbaren Geräte gefunden.')
+        raise SystemExit(f'Im Netzwerk wurden keine verfügbaren Geräte gefunden.')
 
     return available, missing

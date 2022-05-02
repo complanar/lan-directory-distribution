@@ -45,8 +45,7 @@ def shareEach(settings):
     dst = settings.getExchangeDir
     batch(devices, src, dst, progress)
 
-    notify('transfer.complete', 'Zurückgeben fertig',
-           'Das Zurückgeben wurde abgeschlossen')
+    notify('info', 'Das Zurückgeben wurde abgeschlossen')
     # FIXME: clear shares
 
 
@@ -60,10 +59,7 @@ def shareAll(settings):
     dst = settings.getExchangeDir
     batch(devices, src, dst, progress)
 
-    notify(
-        'transfer.complete',
-        'Austeilen fertig',
-        'Das Austeilen wurde abgeschlossen')
+    notify('info', 'Das Austeilen wurde abgeschlossen')
 
 
 def fetch(settings):
@@ -76,8 +72,7 @@ def fetch(settings):
     dst = settings.getFetchDir
     batch(devices, src, dst, progress)
 
-    notify('transfer.complete', 'Einsammeln fertig',
-           'Das Einsammeln wurde abgeschlossen')
+    notify('info', 'Das Einsammeln wurde abgeschlossen')
 
     """
     # nach ZIP fragen
@@ -88,16 +83,14 @@ def fetch(settings):
         zipname = choose('ZIP-Archiv', zipname, filter=['*.zip'])
         if zipname is None:
             notify(
-                'transfer.error',
-                'Abgebrochen',
+                'error',
                 'Der Benutzer hat den Vorgang abgebrochen')
             return
 
         shutil.make_archive(zipname, 'zip', settings.fetch)
         logging.debug(f'{zipname} created')
         notify(
-            'transfer.complete',
-            'ZIP erstellt',
+            'info',
             'Das ZIP-Archiv wurde erstellt')
     """
 
@@ -132,12 +125,7 @@ if __name__ == '__main__':
             os.system('cat USAGE.md')
 
     except KeyboardInterrupt:
-        notify(
-            'transfer.error',
-            'Abgebrochen',
-            'Der Benutzer hat den Vorgang abgebrochen')
+        notify('info','Der Benutzer hat den Vorgang abgebrochen')
 
     except SystemExit as e:
-        notify(
-            'transfer.error',
-            e.args[0], e.args[1])
+        notify('error', e.code)

@@ -61,6 +61,4 @@ be picked based on the actual device using {src_lambda} and {dst_lambda}.
             failures += 1
 
     if failures > 0:
-        raise SystemExit(
-            'Datenaustausch unvollständig',
-            f'{failures} von {num_devices} Übertragen sind fehlgeschlagen.')
+        raise SystemExit(f'{failures} von {num_devices} Übertragungen sind fehlgeschlagen.')

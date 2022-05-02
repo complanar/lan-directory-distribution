@@ -123,9 +123,8 @@ def choose(title, filename, save=True, overwrite=True, filter=[]):
     return filename
 
 
-def notify(category, title, message):
-    """Trigger a notification.
-
-notify('transfer.complete', 'Finished', 'Upload was finished successfully!')
+def notify(category, messege):
+    """Trigger a notification. Categories are 'error', 'info', 'question'
+and 'warning'
 """
-    subprocess.run(['notify-send', '-c', category, title, message])
+    subprocess.run(f'zenity --notification --window-icon="{category}" --text="{messege}"', shell=True)
