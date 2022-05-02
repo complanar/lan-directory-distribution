@@ -16,7 +16,7 @@ class PingWorker(threading.Thread):
         self.ip = ip
         self.count = count
         self.wait = wait
-        self.status = None
+        self.status = False
 
         self.start()
 
@@ -24,6 +24,7 @@ class PingWorker(threading.Thread):
         """Trigger ping as subprocess and save reachability status."""
         cmd = f'ping {self.ip} -c {self.count} -W {self.wait}'
         logging.debug(cmd)
+        print(cmd)
         p = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.status = p.returncode == 0
@@ -35,20 +36,31 @@ def discover(settings, progress, delay=0.1):
     worker = list()
     for device in range(settings.num_clients):
         ip = settings.getIp(device)
+        print(device, ip)
         worker.append(PingWorker(device, ip))
 
     # wait and update progress bar
     n = settings.num_clients - 1
-    while n > 0 and progress.getStatus() is None:
-        # calculate progress based on number of active threads
-        n = threading.activeCount() - 1
+    while n > 0 and progress.is_alive():
+        # calculate progress based on number of active workers
+        n = sum(1 if w.is_alive() else 0 for w in worker)
         progress((settings.num_clients - n) / settings.num_clients)
         time.sleep(delay)
+    progress.finish()
 
     # build device list
-    devices = list()
+    available = list()
+    missing = list()
     for w in worker:
+        w.join()
         if w.status:
-            devices.append(w.device)
+            available.append(w.device)
+        else:
+            missing.append(w.device)
 
-    return devices
+    if len(available) == 0:
+        raise SystemExit(
+            'Keine Geräte',
+            f'Im Netzwerk wurden keine verfügbaren Geräte gefunden.')
+
+    return available, missing

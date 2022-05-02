@@ -1,22 +1,29 @@
 #!/usr/bin/python3
 
 import subprocess
+import threading
 import tempfile
+import logging
 
 
-class ProgressBar(object):
+class ProgressBar(threading.Thread):
     """Creates a zenity-based progress bar that can be altered.
 
 pb = ProgressBar('Please Wait', 'Current progress is {0}%, please wait')
 pb(0.5)
 # later
 pb(0.75)
+if pb.is_alive():
+    # ... check for 'cancel' action
 """
 
     def __init__(self, title, message, delay=0.1):
         """Initialize the progress bar with 0%, a {title} and a {message}.
 Message must contain {0} which is replaced by the percentage value
 """
+        super().__init__()
+        self.status = None
+
         # create temporary file for progress
         self.tmpfile = tempfile.NamedTemporaryFile(mode='w')
         self.tmpfile.write(str(0))
@@ -27,12 +34,30 @@ Message must contain {0} which is replaced by the percentage value
 
         # create progress bar: fetch progress from tmpfile, update progressbar,
         # loop until 100%
-        cmd = f'VAL=0; (while [ $VAL -lt 100 ] ; do VAL2=`cat {filename}`; if [ $VAL -ne $VAL2 ]; then VAL=$VAL2; echo "#{message}"; echo $VAL; fi; sleep {delay}; done)| zenity --progress --title="{title}" --text="Bitte warten" --auto-close --width=500'
-        self.process = subprocess.Popen(
-            cmd,
+        self.cmd = f'''
+VAL=0
+(
+    while [ $VAL -lt 100 ] ; do
+        VAL2=`cat {filename}`
+        if [ $VAL -ne $VAL2 ]; then
+            VAL=$VAL2
+            echo "#{message}"
+            echo $VAL
+        fi
+        sleep {delay}
+    done) |
+zenity --progress --title="{title}" --text="Bitte warten" --auto-close --width=500
+'''
+
+        self.start()
+
+    def run(self):
+        p = subprocess.run(
+            self.cmd,
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
+        self.status = p.returncode == 0
 
     def __call__(self, value):
         """Modify the progress state with [0.0, 1.0]."""
@@ -41,18 +66,16 @@ Message must contain {0} which is replaced by the percentage value
         self.tmpfile.write(str(value))
         self.tmpfile.flush()
 
-    def getStatus(self):
-        """Query status of the progress bar: True == finished, False == canceld, None == running."""
-        p = self.process.poll()
-        if p == 1:
-            # abort
-            return False
-        elif p == 0:
-            # finished
-            return True
+    def finish(self, auto_raise=True):
+        self.__call__(1.0)
+        self.join()
+        if self.status:
+            logging.debug('ProgressBar finished')
         else:
-            # running
-            return None
+            logging.debug('ProgressBar canceled')
+            if auto_raise:
+                raise KeyboardInterrupt
+
 
 # ---------------------------------------------------------------------
 
@@ -70,6 +93,14 @@ answer = ask("Wait a moment", "Do really want this to happen?")
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
     return p.returncode == 0
+
+
+def confirm(title, statement):
+    """Show confirm dialog. On cancel, a KeyboardInterrupt is raised as if
+The user canceled the programm with CTRL+R.
+"""
+    if not ask(title, statement):
+        raise KeyboardInterrupt()
 
 
 def choose(title, filename, save=True, overwrite=True, filter=[]):

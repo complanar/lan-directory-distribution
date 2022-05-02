@@ -14,10 +14,11 @@ class DummyProgress(object):
     def __call__(self, value):
         self.value = value
 
-    def getStatus(self):
-        if self.value == 1.0:
-            return True
-        return None
+    def is_alive(self):
+        return self.value == 1.0
+
+    def finish(self):
+        self.value = 1.0
 
 # ---------------------------------------------------------------------
 
@@ -26,7 +27,7 @@ class DiscoveryTest(unittest.TestCase):
 
     def setUp(self):
         self.settings = Settings()
-        self.settings.first_ip = ipaddress.ip_address('127.0.0.1')
+        self.settings.first_ip = ipaddress.ip_address('127.0.0.0')
         self.settings.num_clients = 5
 
     def tearDown(self):
@@ -43,12 +44,13 @@ class DiscoveryTest(unittest.TestCase):
 
     def test_discover(self):
         p = DummyProgress()
-        devices = discover(self.settings, p)
+        available, missing = discover(self.settings, p)
         self.assertEqual(p.value, 1.0)
-        self.assertEqual(devices, [0, 1, 2, 3, 4])
+        self.assertEqual(available, [1, 2, 3, 4])
+        self.assertEqual(missing, [0])
 
         self.settings.first_ip = ipaddress.ip_address('0.0.0.1')
         p = DummyProgress()
-        devices = discover(self.settings, p)
-        self.assertEqual(p.value, 1.0)
-        self.assertEqual(devices, [])
+        with self.assertRaises(SystemExit):
+            devices = discover(self.settings, p)
+        

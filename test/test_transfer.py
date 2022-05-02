@@ -2,6 +2,7 @@
 
 import unittest
 import ipaddress
+import pathlib
 
 from settings import Settings
 from transfer import TransferWorker, batch
@@ -14,10 +15,11 @@ class DummyProgress(object):
     def __call__(self, value):
         self.value = value
 
-    def getStatus(self):
-        if self.value == 1.0:
-            return True
-        return None
+    def is_alive(self):
+        return self.value == 1.0 
+
+    def finish(self):
+        self.value = 1.0
 
 # ---------------------------------------------------------------------
 
@@ -31,10 +33,10 @@ class TransferTest(unittest.TestCase):
         self.settings.user = 'tester'
 
         self.settings.folder_prefix = 'PC'
-        self.settings.exchange = '~/exchange'
-        self.settings.fetch = '~/fetch'
-        self.settings.share = '~/share'
-        self.settings.shareall = '~/shareAll'
+        self.settings.exchange = pathlib.Path('~/exchange')
+        self.settings.fetch = pathlib.Path('~/fetch')
+        self.settings.share = pathlib.Path('~/share')
+        self.settings.shareall = pathlib.Path('~/shareAll')
 
     def tearDown(self):
         del self.settings
@@ -48,5 +50,8 @@ class TransferTest(unittest.TestCase):
         devices = [1, 3, 4]
         src_lambda = self.settings.getExchangeDir
         dst_lambda = self.settings.getFetchDir
-        status = batch(devices, src_lambda, dst_lambda, p)
-        self.assertTrue(status)
+        with self.assertRaises(SystemExit):
+            # may fail anyway because there is no SSH server available
+            # during unittest
+            batch(devices, src_lambda, dst_lambda, p)
+        

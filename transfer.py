@@ -16,12 +16,16 @@ class TransferWorker(threading.Thread):
         self.dst = dst
         self.port = port
         self.timeout = timeout
+        self.status = None
         self.start()
 
     def run(self):
+        """Trigger scp as subprocess and save success status."""
         cmd = f'scp -o ConnectTimeout={self.timeout} -rP {self.port} {self.src}/* {self.dst}/*'
         logging.debug(cmd)
-        subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
+        p = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.status = p.returncode == 0
 
 
 def batch(devices, src_lambda, dst_lambda, progress, delay=0.1):
@@ -33,16 +37,30 @@ be picked based on the actual device using {src_lambda} and {dst_lambda}.
     for device in devices:
         src = src_lambda(device)
         dst = dst_lambda(device)
+        print(device, src, dst)
         worker.append(TransferWorker(src, dst))
 
     # wait and update progress bar
     num_devices = len(devices)
     n = num_devices
-    while n > 0 and progress.getStatus() is None:
-        n = threading.activeCount() - 1
+    while n > 0 and progress.is_alive():
+        # calculate progress based on number of active workers
+        n = sum(1 if w.is_alive() else 0 for w in worker)
         progress((num_devices - n) / num_devices)
         time.sleep(delay)
+    progress.finish()
 
-    # FIXME: progress.getStatus() isn't working correctly; failed SCPs are not
-    # checked
-    return n == 0
+    # count successes and failures
+    successes = 0
+    failures = 0
+    for w in worker:
+        w.join()
+        if w.status:
+            successes += 1
+        else:
+            failures += 1
+
+    if failures > 0:
+        raise SystemExit(
+            'Datenaustausch unvollständig',
+            f'{failures} von {num_devices} Übertragen sind fehlgeschlagen.')
