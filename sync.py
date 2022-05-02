@@ -137,13 +137,23 @@ def fetch(settings):
             'Das ZIP-Archiv wurde erstellt')
 
 
+# ---------------------------------------------------------------------
+
+
 if __name__ == '__main__':
-    # enable verbosity
+    s = Settings()  
+    fname = s.getPrefDir()
+    
+    # set logging target
     if '-v' in sys.argv:
         logging.basicConfig(level=logging.DEBUG)
-
-    s = Settings()
-    s.loadFromFile('settings.cfg')
+    
+    try:
+        s.loadFromFile(fname)
+    except FileNotFoundError as e:
+        # allow settings creation
+        s.setup()
+    
     s.ensureFolders()
 
     cli = CliArgs()

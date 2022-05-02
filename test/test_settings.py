@@ -2,6 +2,9 @@
 
 import unittest
 import ipaddress
+import os
+import tempfile
+
 
 from settings import Settings
 
@@ -22,6 +25,22 @@ class SettingTest(unittest.TestCase):
 
     def tearDown(self):
         del self.settings
+
+    def test_loadSave(self):
+        tmpfile = tempfile.NamedTemporaryFile(mode='w')
+        self.settings.saveToFile(tmpfile.name)
+
+        loaded = Settings()
+        loaded.loadFromFile(tmpfile.name)
+        
+        self.assertEqual(self.settings.first_ip, loaded.first_ip)
+        self.assertEqual(self.settings.num_clients, loaded.num_clients)
+        self.assertEqual(self.settings.user, loaded.user)
+        self.assertEqual(self.settings.folder_prefix, loaded.folder_prefix)
+        self.assertEqual(self.settings.exchange, loaded.exchange)
+        self.assertEqual(self.settings.fetch.replace('~', os.path.expanduser('~')), loaded.fetch)
+        self.assertEqual(self.settings.share.replace('~', os.path.expanduser('~')), loaded.share)
+        self.assertEqual(self.settings.shareall.replace('~', os.path.expanduser('~')), loaded.shareall)
 
     def test_getDirName(self):
         self.assertEqual(self.settings.getDirName(2), 'PC03')
