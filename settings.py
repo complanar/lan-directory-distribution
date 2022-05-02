@@ -109,11 +109,17 @@ class Settings(object):
         logging.debug(f'Saved to {fname}')
 
     def ensureFolders(self):
+        self.share = self.share.expanduser()
+        self.fetch = self.fetch.expanduser()
+        self.shareall = self.shareall.expanduser()
+
+        # local share / fetch / shareall directories
         for folder in [self.share, self.fetch, self.shareall]:
             if not folder.is_dir():
                 folder.mkdir()
                 logging.debug(f'{folder} created')
 
+        # local share/<device> and fetch/<device> directories
         for folder in [self.share, self.fetch]:
             for device in range(self.num_clients):
                 subfolder = self.getDirName(device)
