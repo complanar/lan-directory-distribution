@@ -51,11 +51,14 @@ def shareEach(settings):
 
 def shareAll(settings):
     """Share common files with available devices."""
+    # helper to force sharing from force 'all'-directory
+    def src(device):
+        return settings.getShareDir()
+
     devices = queryDevices(settings)
 
     # show progress bar while sharing
     progress = ProgressBar('Austeilen', '{0}% abgeschlossen. Bitte warten...')
-    def src(device): return settings.getShareDir()  # force 'all'
     dst = settings.getExchangeDir
     batch(devices, src, dst, progress)
 
@@ -125,7 +128,7 @@ if __name__ == '__main__':
             os.system('cat USAGE.md')
 
     except KeyboardInterrupt:
-        notify('info','Der Benutzer hat den Vorgang abgebrochen')
+        notify('info', 'Der Benutzer hat den Vorgang abgebrochen')
 
     except SystemExit as e:
         notify('error', e.code)

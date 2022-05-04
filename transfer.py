@@ -37,7 +37,6 @@ be picked based on the actual device using {src_lambda} and {dst_lambda}.
     for device in devices:
         src = src_lambda(device)
         dst = dst_lambda(device)
-        print(device, src, dst)
         worker.append(TransferWorker(src, dst))
 
     # wait and update progress bar
@@ -61,4 +60,5 @@ be picked based on the actual device using {src_lambda} and {dst_lambda}.
             failures += 1
 
     if failures > 0:
-        raise SystemExit(f'{failures} von {num_devices} Übertragungen sind fehlgeschlagen.')
+        raise SystemExit(
+            f'{failures} von {num_devices} Übertragungen sind fehlgeschlagen.')
