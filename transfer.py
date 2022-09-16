@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import os
 import subprocess
 import threading
 import time
@@ -21,11 +22,16 @@ class TransferWorker(threading.Thread):
 
     def run(self):
         """Trigger scp as subprocess and save success status."""
-        cmd = f'scp -o ConnectTimeout={self.timeout} -rP {self.port} {self.src}/* {self.dst}/'
-        logging.debug(cmd)
-        p = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE,
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        self.status = p.returncode == 0
+        # skip empty directories
+        if str(self.src).startswith('/') and len(os.listdir(self.src)) == 0:
+            logging.debug(f'Skipping empty directory {self.src}.')
+            self.status = 1
+        else:
+            cmd = f'scp -o ConnectTimeout={self.timeout} -rP {self.port} {self.src}/* {self.dst}/'
+            logging.debug(cmd)
+            p = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.status = p.returncode == 0
 
 
 def batch(devices, src_lambda, dst_lambda, remote_port, progress, delay=0.1):
