@@ -21,7 +21,7 @@ class TransferWorker(threading.Thread):
 
     def run(self):
         """Trigger scp as subprocess and save success status."""
-        cmd = f'scp -o ConnectTimeout={self.timeout} -rP {self.port} {self.src}/* {self.dst}/*'
+        cmd = f'scp -o ConnectTimeout={self.timeout} -rP {self.port} {self.src}/* {self.dst}/'
         logging.debug(cmd)
         p = subprocess.run(cmd, shell=True, stdin=subprocess.PIPE,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
