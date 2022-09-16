@@ -33,38 +33,89 @@ reachable. Returns a list of available device IDs.
 
 # ---------------------------------------------------------------------
 
+def clearShareDirectories(settings, devices):
+    for device in devices:
+        directory = settings.getShareDir(device)
+        cmd = f'rm -r {directory}/*'
+        logging.debug(cmd)
+        os.system(cmd)
+    if len(devices) > 1:
+        notify('info', 'Die Austeil-Ordner wurden geleert.')
+    else:
+        notify('info', 'Der Austeil-Ordner wurde geleert.')
+
+# ---------------------------------------------------------------------
+
 def shareEach(settings):
     """Share individual files with available devices."""
+    
     devices = queryDevices(settings)
+    first = settings.getDirName(devices[0])
+    last = settings.getDirName(devices[-1])
 
-    # show progressbar while sharing
-    progress = ProgressBar(
-        'Zurückgeben',
-        '{0}% abgeschlossen. Bitte warten...')
-    src = settings.getShareDir
-    dst = settings.getExchangeDir
-    remote_port = settings.remote_port
-    batch(devices, src, dst, remote_port, progress)
+    if len(devices) > 1:
+        directories = f'{settings.share}/{first} bis …/{last}'
+        clear = 'Die genannten Ordner werden'
+    elif len(devices) == 1:
+        directories = f'{settings.share}/{first}'
+        clear = 'Der genannte Ordner wird'
+    else:
+        notify('info', 'Es wurden keine verbundenen Schülercomputer gefunden.')
+        return
+    
+    msg = f'Die Dateien in in \n\n    {directories} \n\n' + \
+        'werden ausgeteilt. Dies kann einen Moment dauern. Sie werden ' + \
+        'benachrichtigt, wenn das Austeilen abgeschlossen ist. \n\nWARNUNG: ' + \
+        f'{clear} anschließend VOLLSTÄNDIG GELEERT. Stellen ' + \
+        'Sie sicher, dass Sie eine KOPIE der Daten besitzen. \n\n' + \
+        '    Fortfahren?'
+    ok = ask('Warnung', msg)
+    if ok:
+        # show progressbar while sharing
+        progress = ProgressBar(
+            'Zurückgeben',
+            '{0}% abgeschlossen. Bitte warten …')
+        src = settings.getShareDir
+        dst = settings.getExchangeDir
+        remote_port = settings.remote_port
+        batch(devices, src, dst, remote_port, progress)
 
-    notify('info', 'Das Zurückgeben wurde abgeschlossen')
-    # FIXME: clear shares
+        notify('info', 'Das Zurückgeben wurde abgeschlossen.')
+        
+        # clear share directories
+        clearShareDirectories(settings, devices)
+        
+    else:
+         notify('info', 'Der Benutzer hat den Vorgang abgebrochen.')
 
 
 def shareAll(settings):
     """Share common files with available devices."""
-    # helper to force sharing from force 'all'-directory
-    def src(device):
-        return settings.getShareDir()
+    msg = f'Die Dateien in in \n\n    {settings.shareall} \n\n' + \
+        'werden ausgeteilt. Dies kann einen Moment dauern. Sie werden ' + \
+        'benachrichtigt, wenn das Austeilen abgeschlossen ist. \n\nWARNUNG: ' + \
+        'Der Austeil-Ordner wird anschließend VOLLSTÄNDIG GELEERT. Stellen ' + \
+        'Sie sicher, dass Sie eine KOPIE der Daten besitzen. \n\n' + \
+        '    Fortfahren?'
+    ok = ask('Warnung', msg)
+    if ok:
+        # helper to force sharing from force 'all'-directory
+        def src(device):
+            return settings.getShareDir()
 
-    devices = queryDevices(settings)
+        devices = queryDevices(settings)
 
-    # show progress bar while sharing
-    progress = ProgressBar('Austeilen', '{0}% abgeschlossen. Bitte warten...')
-    dst = settings.getExchangeDir
-    remote_port = settings.remote_port
-    batch(devices, src, dst, remote_port, progress)
+        # show progress bar while sharing
+        progress = ProgressBar('Austeilen', '{0}% abgeschlossen. Bitte warten …')
+        dst = settings.getExchangeDir
+        remote_port = settings.remote_port
+        batch(devices, src, dst, remote_port, progress)
 
-    notify('info', 'Das Austeilen wurde abgeschlossen')
+        notify('info', 'Das Austeilen wurde abgeschlossen.')
+        # clear share directories
+        clearShareDirectories(settings, [None])
+    else:
+        notify('info', 'Der Benutzer hat den Vorgang abgebrochen.')
 
 
 def fetch(settings):
@@ -72,7 +123,7 @@ def fetch(settings):
     devices = queryDevices(settings)
 
     # show progress bar while fetching
-    progress = ProgressBar('Einsammeln', '{0}% abgeschlossen. Bitte warten...')
+    progress = ProgressBar('Einsammeln', '{0}% abgeschlossen. Bitte warten …')
     src = settings.getExchangeDir
     dst = settings.getFetchDir
     remote_port = settings.remote_port
@@ -89,14 +140,12 @@ def fetch(settings):
         if zipname is None:
             notify(
                 'error',
-                'Der Benutzer hat den Vorgang abgebrochen')
+                'Der Benutzer hat den Vorgang abgebrochen.')
             return
 
         shutil.make_archive(zipname, 'zip', settings.fetch)
         logging.debug(f'{zipname} created')
-        notify(
-            'info',
-            'Das ZIP-Archiv wurde erstellt')
+        notify('info', 'Das ZIP-Archiv wurde erstellt')
 
 # ---------------------------------------------------------------------
 
