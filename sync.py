@@ -73,7 +73,8 @@ def fetch(settings):
     progress = ProgressBar('Einsammeln', '{0}% abgeschlossen. Bitte warten...')
     src = settings.getExchangeDir
     dst = settings.getFetchDir
-    batch(devices, src, dst, progress)
+    remote_port = settings.remote_port
+    batch(devices, src, dst, remote_port, progress)
 
     notify('info', 'Das Einsammeln wurde abgeschlossen')
 

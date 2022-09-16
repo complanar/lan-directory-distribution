@@ -42,6 +42,7 @@ class Settings(object):
         self.first_ip = ipaddress.ip_address(cfg['network']['first_ip'])
         self.num_clients = int(cfg['network']['num_clients'])
         self.user = cfg['network']['user']
+        self.remote_port = cfg['network']['remote_port']
 
         self.folder_prefix = cfg['folders']['prefix']
         self.exchange = pathlib.Path(cfg['folders']['exchange'])
@@ -54,7 +55,8 @@ class Settings(object):
         cfg['network'] = {
             'first_ip': self.first_ip,
             'num_clients': self.num_clients,
-            'user': self.user
+            'user': self.user,
+            'remote_port': self.remote_port
         }
         cfg['folders'] = {
             'prefix': self.folder_prefix,
@@ -81,6 +83,9 @@ class Settings(object):
                 'Number of total clients [15]: ', 15))
         self.user = input_default(
             'Remote username to login to [schueler]: ', 'schueler')
+        self.remote_port = int(
+            input_default(
+                'Remote port number [32400]:', 32400))
 
         # query folder settings
         self.folder_prefix = input_default(

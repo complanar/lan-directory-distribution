@@ -9,7 +9,7 @@ import logging
 class TransferWorker(threading.Thread):
     """Thread to handle copy via SSH."""
 
-    def __init__(self, src, dst, port=32400, timeout=3):
+    def __init__(self, src, dst, port=22, timeout=3):
         """Transer files from {src} to {dst}."""
         super().__init__()
         self.src = src
@@ -28,7 +28,7 @@ class TransferWorker(threading.Thread):
         self.status = p.returncode == 0
 
 
-def batch(devices, src_lambda, dst_lambda, progress, delay=0.1):
+def batch(devices, src_lambda, dst_lambda, remote_port, progress, delay=0.1):
     """Batch transfer for {devices}. Source and destination folders will
 be picked based on the actual device using {src_lambda} and {dst_lambda}.
 """
@@ -37,7 +37,7 @@ be picked based on the actual device using {src_lambda} and {dst_lambda}.
     for device in devices:
         src = src_lambda(device)
         dst = dst_lambda(device)
-        worker.append(TransferWorker(src, dst))
+        worker.append(TransferWorker(src, dst, remote_port))
 
     # wait and update progress bar
     num_devices = len(devices)
