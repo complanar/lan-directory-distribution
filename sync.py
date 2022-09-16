@@ -12,7 +12,6 @@ from transfer import batch
 from args import CliArgs
 from ui import ProgressBar, ask, confirm, choose, notify
 
-
 def queryDevices(settings):
     """Discover all available devices and warn if not every device is
 reachable. Returns a list of available device IDs.
@@ -22,14 +21,15 @@ reachable. Returns a list of available device IDs.
         'Suche Schülercomputer',
         '{0}% durchsucht. Bitte warten...')
     available, missing = discover(settings, progress)
+    logging.debug(f'Available clients: {available}')
+    logging.debug(f'Missing clients: {missing}')
 
     if len(missing) > 0:
-        devlist = ', '.join(map(str, missing))
+        devlist = ', '.join(map(settings.getDirName, missing))
         msg = f'Folgende Schülercomputer sind nicht erreichbar:\n\n{devlist}\n\nDennoch fortfahren?'
         confirm('Einsammeln', msg)
 
     return available
-
 
 # ---------------------------------------------------------------------
 
@@ -43,7 +43,8 @@ def shareEach(settings):
         '{0}% abgeschlossen. Bitte warten...')
     src = settings.getShareDir
     dst = settings.getExchangeDir
-    batch(devices, src, dst, progress)
+    remote_port = settings.remote_port
+    batch(devices, src, dst, remote_port, progress)
 
     notify('info', 'Das Zurückgeben wurde abgeschlossen')
     # FIXME: clear shares
@@ -60,7 +61,8 @@ def shareAll(settings):
     # show progress bar while sharing
     progress = ProgressBar('Austeilen', '{0}% abgeschlossen. Bitte warten...')
     dst = settings.getExchangeDir
-    batch(devices, src, dst, progress)
+    remote_port = settings.remote_port
+    batch(devices, src, dst, remote_port, progress)
 
     notify('info', 'Das Austeilen wurde abgeschlossen')
 
