@@ -80,7 +80,6 @@ def fetch(settings):
 
     notify('info', 'Das Einsammeln wurde abgeschlossen')
 
-    """
     # nach ZIP fragen
     msg = f'Sollen die eingesammelten Dateien zu einem ZIP-Archiv komprimiert werden?'
     ok = ask('ZIP-Archiv', msg)
@@ -98,7 +97,6 @@ def fetch(settings):
         notify(
             'info',
             'Das ZIP-Archiv wurde erstellt')
-    """
 
 # ---------------------------------------------------------------------
 

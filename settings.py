@@ -113,7 +113,7 @@ class Settings(object):
 
         logging.debug(f'Saved to {fname}')
 
-    def ensureFolders(self):
+    def ensureFolders(self, skipDevices=None):
         self.share = self.share.expanduser()
         self.fetch = self.fetch.expanduser()
         self.shareall = self.shareall.expanduser()
@@ -127,11 +127,12 @@ class Settings(object):
         # local share/<device> and fetch/<device> directories
         for folder in [self.share, self.fetch]:
             for device in range(self.num_clients):
-                subfolder = self.getDirName(device)
-                tmp = folder / subfolder
-                if not tmp.is_dir():
-                    tmp.mkdir()
-                    logging.debug(f'{tmp} created')
+                if skipDevices == None or device not in skipDevices:
+                    subfolder = self.getDirName(device)
+                    tmp = folder / subfolder
+                    if not tmp.is_dir():
+                        tmp.mkdir()
+                        logging.debug(f'{tmp} created')
 
     def getDirName(self, device):
         """Return local fetch directory for a device, e.g. S03 for device #2"""
