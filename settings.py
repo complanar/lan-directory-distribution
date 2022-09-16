@@ -100,7 +100,7 @@ class Settings(object):
         self.shareall = pathlib.Path(
             input_default(
                 'Local share-all directory [~/Schreibtisch/Austeilen/Alle]:',
-                '~/Schreibtisch/Austausch/Alle'))
+                '~/Schreibtisch/Austeilen/Alle'))
 
         # create file
         fname = self.getPrefDir()
